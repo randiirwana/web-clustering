@@ -118,27 +118,51 @@ h2 {
 }
 
 .table-responsive {
-    border-radius: 12px;
-    overflow: hidden;
-}
-table {
     width: 100%;
+    overflow-x: unset;
+}
+
+.table {
+    width: 100% !important;
+    min-width: unset !important;
+    table-layout: auto;
     border-collapse: collapse;
     margin-top: 10px;
     background: #fff;
 }
+
 th, td {
     border: 1px solid #e0eafc;
     padding: 10px 12px;
     text-align: left;
+    word-break: break-word;
+    white-space: normal;
+    vertical-align: middle;
 }
+
 th {
     background: linear-gradient(90deg, #0077ff 0%, #00c6ff 100%);
     color: white;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.08em;
+    letter-spacing: 0.5px;
+    text-align: center;
+    border-bottom: 3px solid #00c6ff;
+    box-shadow: 0 2px 8px rgba(0,119,255,0.10);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    text-transform: capitalize;
 }
+
+/* Hanya atur lebar kolom homepage */
+th:nth-child(2), td:nth-child(2) { width: 30%; min-width: 180px; }
+
 tr:nth-child(even) {
     background: #f7faff;
+}
+tr:hover td {
+    background: #e0eafc;
+    transition: background 0.2s;
 }
 
 .alert {
@@ -169,6 +193,14 @@ select.form-control:focus, select.form-select:focus {
     outline: none;
 }
 
+td {
+    font-size: 1em;
+    color: #222;
+    background: #fff;
+    vertical-align: middle;
+    border-bottom: 1.5px solid #e0eafc;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 12px 4px 18px 4px;
@@ -179,7 +211,13 @@ select.form-control:focus, select.form-select:focus {
     .plot-container, .table-container {
         padding: 8px 2px 2px 2px;
     }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    table {
+        font-size: 0.95em;
+    }
     th, td {
-        padding: 7px 6px;
+        padding: 7px 4px;
     }
 }

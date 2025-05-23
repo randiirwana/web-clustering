@@ -94,6 +94,11 @@ def upload_file():
             if features.empty or features.isnull().all().all():
                  return render_template('index.html', error="Data setelah preprocessing kosong atau tidak valid.")
 
+            print("Jumlah data setelah preprocessing:", len(df))
+
+            print(df[['vote_average', 'vote_count']].head())
+            print(df[['vote_average', 'vote_count']].dtypes)
+
             X_scaled = scaler.transform(features)
             clusters = model.predict(X_scaled)
             df['Cluster'] = clusters
@@ -110,9 +115,16 @@ def upload_file():
             plot_base64 = get_plot_base64()
             plt.close()
 
-            display_columns = [col for col in df.columns if col != 'genres']
-            headers = display_columns
+            display_columns = ['budget', 'homepage', 'vote_average', 'vote_count', 'main_genre', 'Cluster']
+            df[display_columns] = df[display_columns].fillna('-')
+            headers = [h.replace('_', ' ').title() for h in display_columns]
             results = df[display_columns].values.tolist()
+
+            print("Jumlah baris yang dikirim ke template:", len(results))
+            print("Contoh baris results:", results[0])
+
+            print("Headers:", headers)
+            print("Contoh baris results:", results[0])
 
             return render_template('index.html', headers=headers, results=results, plot_base64=plot_base64)
 
