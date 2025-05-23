@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi web Clustering Film</title>
+    <!-- Link ke Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2 class="mb-4">Aplikasi web Clustering Film Berdasarkan Fitur</h2>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="single-input-tab" data-toggle="tab" href="#single-input" role="tab" aria-controls="single-input" aria-selected="true">Input Data Tunggal</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="upload-dataset-tab" data-toggle="tab" href="#upload-dataset" role="tab" aria-controls="upload-dataset" aria-selected="false">Upload Dataset</a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Tab Input Data Tunggal -->
+            <div class="tab-pane fade show active" id="single-input" role="tabpanel" aria-labelledby="single-input-tab">
+                 <div class="card mt-4">
+                    <div class="card-header">Masukkan Data Film</div>
+                    <div class="card-body">
+                        <form method="POST" action="/predict">
+                            <div class="form-group">
+                                <label for="rating">Rating (vote_average):</label>
+                                <input type="number" class="form-control" id="rating" name="rating" step="0.1" required value="{{ rating if rating is defined }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="votes">Jumlah Vote (vote_count):</label>
+                                <input type="number" class="form-control" id="votes" name="votes" required value="{{ votes if votes is defined }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="genre">Genre:</label>
+                                <select class="form-control" id="genre" name="genre" required>
+                                     <option value="Action" {% if genre is defined and genre == 'Action' %} selected {% endif %}>Action</option>
+                                     <option value="Comedy" {% if genre is defined and genre == 'Comedy' %} selected {% endif %}>Comedy</option>
+                                     <option value="Drama" {% if genre is defined and genre == 'Drama' %} selected {% endif %}>Drama</option>
+                                     <option value="Horror" {% if genre is defined and genre == 'Horror' %} selected {% endif %}>Horror</option>
+                                     <!-- Tambahkan genre lain jika perlu -->
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Prediksi Cluster</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tampilkan Hasil Clustering Tunggal -->
+                {% if result %}
+                    <div class="alert alert-success mt-4" role="alert">
+                        {{ result }}
+                    </div>
+                {% endif %}
+                {% if plot_base64 %}
+                    <div class="plot-container">
+                        <img src="data:image/png;base64,{{ plot_base64 }}" alt="Visualisasi Prediksi" class="img-fluid">
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tab Upload Dataset -->
+            <div class="tab-pane fade" id="upload-dataset" role="tabpanel" aria-labelledby="upload-dataset-tab">
+                <div class="card mt-4">
+                    <div class="card-header">Upload Dataset (CSV)</div>
+                    <div class="card-body">
+                        <form method="POST" action="/upload" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="datasetFile">Pilih file CSV:</label>
+                                <input type="file" class="form-control-file" id="datasetFile" name="dataset" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Proses Clustering & Visualisasi</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tampilkan Visualisasi (Plot) -->
+                {% if plot_base64 %}
+                    <div class="plot-container">
+                        <img src="data:image/png;base64,{{ plot_base64 }}" alt="Cluster Plot" class="img-fluid">
+                    </div>
+                {% endif %}
+
+                <!-- Tombol dan area untuk grafik Elbow -->
+                <div class="mt-4">
+                    <button id="show-elbow-btn" class="btn btn-info">Tampilkan Grafik Elbow Method</button>
+                </div>
+                <div id="elbow-plot-container" class="plot-container mt-3" style="display:none;">
+                    <img id="elbow-plot-img" src="" alt="Elbow Plot" class="img-fluid" />
+                </div>
+                <!-- Tombol dan area untuk grafik Silhouette Score -->
+                <div class="mt-2">
+                    <button id="show-silhouette-btn" class="btn btn-secondary">Tampilkan Grafik Silhouette Score</button>
+                </div>
+                <div id="silhouette-plot-container" class="plot-container mt-3" style="display:none;">
+                    <img id="silhouette-plot-img" src="" alt="Silhouette Plot" class="img-fluid" />
+                </div>
+
+                <!-- Tampilkan Hasil Clustering (Tabel) -->
+                {% if results %}
+                    <div class="table-container">
+                         <div class="card">
+                            <div class="card-header">Data dengan Hasil Clustering</div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                {% for header in headers %}
+                                                    <th>{{ header }}</th>
+                                                {% endfor %}
+                                                <th>Cluster</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in results %}
+                                                <tr>
+                                                    {% for cell in row %}
+                                                        <td>{{ cell }}</td>
+                                                    {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="alert alert-danger mt-4" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Link ke Bootstrap JS dan dependensi -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    document.getElementById('show-elbow-btn').addEventListener('click', function() {
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Memuat...';
+        fetch('/elbow_data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('elbow-plot-img').src = 'data:image/png;base64,' + data.plot_base64;
+                document.getElementById('elbow-plot-container').style.display = 'block';
+                btn.textContent = 'Tampilkan Grafik Elbow Method';
+                btn.disabled = false;
+            })
+            .catch(() => {
+                btn.textContent = 'Tampilkan Grafik Elbow Method';
+                btn.disabled = false;
+                alert('Gagal memuat grafik elbow.');
+            });
+    });
+    document.getElementById('show-silhouette-btn').addEventListener('click', function() {
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Memuat...';
+        fetch('/silhouette_data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('silhouette-plot-img').src = 'data:image/png;base64,' + data.plot_base64;
+                document.getElementById('silhouette-plot-container').style.display = 'block';
+                btn.textContent = 'Tampilkan Grafik Silhouette Score';
+                btn.disabled = false;
+            })
+            .catch(() => {
+                btn.textContent = 'Tampilkan Grafik Silhouette Score';
+                btn.disabled = false;
+                alert('Gagal memuat grafik silhouette.');
+            });
+    });
+    </script>
+</body>
+</html>
